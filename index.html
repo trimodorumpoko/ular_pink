@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<title>Snake Romantis 💖</title>
+<style>
+  body {
+    text-align: center;
+    background: #ffe6f0;
+    font-family: Arial;
+  }
+  canvas {
+    background: #fff;
+    margin-top: 20px;
+    border: 3px solid pink;
+  }
+</style>
+</head>
+<body>
+
+<h2>🐍 </h2>
+<p>Score Tertinggi : <b> Komodo_Jantan</b></p>
+
+<canvas id="game" width="400" height="400"></canvas>
+
+<script>
+const canvas = document.getElementById("game");
+const ctx = canvas.getContext("2d");
+
+const box = 20;
+let snake = [{x: 200, y: 200}];
+let direction = "RIGHT";
+
+let food = {
+  x: Math.floor(Math.random()*20)*box,
+  y: Math.floor(Math.random()*20)*box
+};
+
+let text = "I LOVE U AMEL";
+let collected = [];
+
+let speed = 300;
+let game = setInterval(draw, speed);
+
+document.addEventListener("keydown", dir);
+
+function dir(e) {
+  if (e.key === "ArrowLeft" && direction !== "RIGHT") direction = "LEFT";
+  else if (e.key === "ArrowUp" && direction !== "DOWN") direction = "UP";
+  else if (e.key === "ArrowRight" && direction !== "LEFT") direction = "RIGHT";
+  else if (e.key === "ArrowDown" && direction !== "UP") direction = "DOWN";
+}
+
+function draw() {
+  ctx.fillStyle = "#fff0f5";
+  ctx.fillRect(0,0,400,400);
+
+  // gambar ular
+  for (let i = 0; i < snake.length; i++) {
+    ctx.fillStyle = i === 0 ? "hotpink" : "pink";
+    ctx.fillRect(snake[i].x, snake[i].y, box, box);
+
+    // huruf di badan
+    if (collected[i]) {
+      ctx.fillStyle = "white";
+      ctx.font = "14px Arial";
+      ctx.fillText(collected[i], snake[i].x+5, snake[i].y+15);
+    }
+  }
+
+  // makanan
+  ctx.fillStyle = "red";
+  ctx.fillRect(food.x, food.y, box, box);
+
+  let headX = snake[0].x;
+  let headY = snake[0].y;
+
+  if (direction === "LEFT") headX -= box;
+  if (direction === "UP") headY -= box;
+  if (direction === "RIGHT") headX += box;
+  if (direction === "DOWN") headY += box;
+
+  // TEMBUS TEMBOK (wrap)
+  if (headX < 0) headX = 400 - box;
+  if (headY < 0) headY = 400 - box;
+  if (headX >= 400) headX = 0;
+  if (headY >= 400) headY = 0;
+
+  // makan
+  if (headX === food.x && headY === food.y) {
+    food = {
+      x: Math.floor(Math.random()*20)*box,
+      y: Math.floor(Math.random()*20)*box
+    };
+
+    if (collected.length < text.length) {
+      collected.push(text[collected.length]);
+    }
+
+    // tambah kecepatan sedikit
+    if (speed > 60) {
+      speed -= 3;
+      clearInterval(game);
+      game = setInterval(draw, speed);
+    }
+
+  } else {
+    snake.pop();
+  }
+
+  let newHead = {x: headX, y: headY};
+  snake.unshift(newHead);
+
+  // ENDING
+  if (collected.length === text.length) {
+    clearInterval(game);
+    loveAnimation();
+  }
+}
+
+// ==========================
+// 💖 ANIMASI LOVE ENDING
+// ==========================
+function loveAnimation() {
+  let scale = 0.5;
+  let hearts = [];
+
+  for (let i = 0; i < 30; i++) {
+    hearts.push({
+      x: Math.random() * 400,
+      y: Math.random() * 400,
+      size: Math.random() * 20 + 10,
+      speed: Math.random() * 2 + 1
+    });
+  }
+
+  function animate() {
+    ctx.fillStyle = "rgba(0,0,0,0.2)";
+    ctx.fillRect(0, 0, 400, 400);
+
+    // hati jatuh
+    hearts.forEach(h => {
+      ctx.fillStyle = "pink";
+      ctx.font = h.size + "px Arial";
+      ctx.fillText("💖", h.x, h.y);
+
+      h.y += h.speed;
+      if (h.y > 400) {
+        h.y = 0;
+        h.x = Math.random() * 400;
+      }
+    });
+
+    // teks zoom
+    ctx.save();
+    ctx.translate(200, 200);
+    ctx.scale(scale, scale);
+
+    ctx.fillStyle = "hotpink";
+    ctx.font = "bold 40px Arial";
+    ctx.textAlign = "center";
+    ctx.fillText("I LOVE U", 0, -10);
+    ctx.fillText("AMEL 💖", 0, 40);
+
+    ctx.restore();
+
+    if (scale < 1.5) scale += 0.01;
+
+    requestAnimationFrame(animate);
+  }
+
+  animate();
+}
+</script>
+
+</body>
+</html>
