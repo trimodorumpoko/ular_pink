@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<title>SNAKE</title>
+
+<style>
+body {
+  margin:0;
+  text-align:center;
+  font-family:'Segoe UI',sans-serif;
+  background:linear-gradient(135deg,#ffe6f0,#ffd6e7);
+}
+
+h2 { color:hotpink; }
+
+canvas {
+  background:rgba(255,255,255,0.9);
+  margin-top:10px;
+  border-radius:20px;
+  box-shadow:0 0 20px pink;
+}
+
+.controls { margin-top:10px; }
+
+.btn {
+  width:60px;
+  height:60px;
+  font-size:22px;
+  border-radius:20px;
+  border:none;
+  margin:5px;
+  background:linear-gradient(145deg,hotpink,deeppink);
+  color:white;
+}
+.btn:active { transform:scale(0.9); }
+
+.overlay {
+  position:fixed;
+  top:0;left:0;
+  width:100%;height:100%;
+  background:rgba(0,0,0,0.7);
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  flex-direction:column;
+  color:white;
+  opacity:0;
+  pointer-events:none;
+  transition:1.2s;
+}
+
+.overlay.show { opacity:1; }
+
+.secret {
+  margin-top:20px;
+  font-size:20px;
+  color:#ffd1dc;
+  opacity:0;
+  transition:2s;
+}
+.secret.show { opacity:1; }
+</style>
+</head>
+
+<body>
+
+<h2>🐍</h2>
+<p>Score Tertinggi : <b> Komodo_Jantan</b></p>
+<canvas id="game" width="400" height="400"></canvas>
+
+<div class="controls">
+  <div><button class="btn" onclick="setDir('UP')">⬆️</button></div>
+  <div>
+    <button class="btn" onclick="setDir('LEFT')">⬅️</button>
+    <button class="btn" onclick="setDir('DOWN')">⬇️</button>
+    <button class="btn" onclick="setDir('RIGHT')">➡️</button>
+  </div>
+</div>
+
+<!-- 🎵 MUSIK -->
+<audio id="bgm" loop>
+  <source src="lagu.mp3" type="audio/mpeg">
+</audio>
+
+<!-- 💕 OVERLAY -->
+<div id="overlay" class="overlay">
+  <div style="font-size:40px;">💖 I LOVE U 💖</div>
+  <div style="font-size:55px; color:pink;">AMEL</div>
+  <div id="secret" class="secret">
+    Makasih udah hadir di hidup aku 💕<br>
+    
+  </div>
+</div>
+
+<script>
+const canvas = document.getElementById("game");
+const ctx = canvas.getContext("2d");
+const overlay = document.getElementById("overlay");
+const secret = document.getElementById("secret");
+const bgm = document.getElementById("bgm");
+
+// autoplay musik
+document.body.addEventListener("click", ()=>{
+  bgm.play();
+}, {once:true});
+
+const box = 20;
+let snake = [{x:200,y:200}];
+let direction = "RIGHT";
+
+let food = randomFood();
+let text = "I LOVE U AMEL";
+let collected = [];
+
+let particles = [];
+
+let speed = 300;
+let game = setInterval(draw, speed);
+
+function randomFood(){
+  return {
+    x:Math.floor(Math.random()*20)*box,
+    y:Math.floor(Math.random()*20)*box
+  }
+}
+
+// kontrol
+document.addEventListener("keydown", e=>{
+  if(e.key==="ArrowLeft") setDir("LEFT");
+  if(e.key==="ArrowRight") setDir("RIGHT");
+  if(e.key==="ArrowUp") setDir("UP");
+  if(e.key==="ArrowDown") setDir("DOWN");
+});
+
+function setDir(d){
+  if(d==="LEFT" && direction!=="RIGHT") direction="LEFT";
+  if(d==="RIGHT" && direction!=="LEFT") direction="RIGHT";
+  if(d==="UP" && direction!=="DOWN") direction="UP";
+  if(d==="DOWN" && direction!=="UP") direction="DOWN";
+}
+
+// ✨ SPARKLE
+function createSparkle(x,y){
+  for(let i=0;i<20;i++){
+    particles.push({
+      x:x+box/2,
+      y:y+box/2,
+      size:Math.random()*3+1,
+      speedX:(Math.random()-0.5)*5,
+      speedY:(Math.random()-0.5)*5,
+      life:40
+    });
+  }
+}
+
+function draw(){
+  ctx.fillStyle="#fff0f5";
+  ctx.fillRect(0,0,400,400);
+
+  // ular
+  snake.forEach((s,i)=>{
+    ctx.fillStyle=i===0?"hotpink":"pink";
+    ctx.fillRect(s.x,s.y,box,box);
+
+    if(collected[i]){
+      ctx.fillStyle="white";
+      ctx.font="14px Arial";
+      ctx.fillText(collected[i],s.x+5,s.y+15);
+    }
+  });
+
+  // 🔴 makanan kotak
+  ctx.fillStyle="red";
+  ctx.fillRect(food.x, food.y, box, box);
+
+  let headX=snake[0].x;
+  let headY=snake[0].y;
+
+  if(direction==="LEFT") headX-=box;
+  if(direction==="RIGHT") headX+=box;
+  if(direction==="UP") headY-=box;
+  if(direction==="DOWN") headY+=box;
+
+  // tembus
+  if(headX<0) headX=400-box;
+  if(headX>=400) headX=0;
+  if(headY<0) headY=400-box;
+  if(headY>=400) headY=0;
+
+  // makan
+  if(headX===food.x && headY===food.y){
+    createSparkle(food.x,food.y);
+    food=randomFood();
+
+    if(collected.length<text.length){
+      collected.push(text[collected.length]);
+    }
+
+    if(speed>60){
+      speed-=3;
+      clearInterval(game);
+      game=setInterval(draw,speed);
+    }
+  } else {
+    snake.pop();
+  }
+
+  snake.unshift({x:headX,y:headY});
+
+  // ✨ render sparkle
+  particles.forEach((p,i)=>{
+    ctx.fillStyle="white";
+    ctx.globalAlpha = p.life / 40;
+    ctx.beginPath();
+    ctx.arc(p.x,p.y,p.size,0,Math.PI*2);
+    ctx.fill();
+    ctx.globalAlpha = 1;
+
+    p.x+=p.speedX;
+    p.y+=p.speedY;
+    p.life--;
+
+    if(p.life<=0){
+      particles.splice(i,1);
+    }
+  });
+
+  // ending
+  if(collected.length===text.length){
+    clearInterval(game);
+    showEnding();
+  }
+}
+
+// 💕 ENDING
+function showEnding(){
+  overlay.classList.add("show");
+
+  setTimeout(()=>{
+    secret.classList.add("show");
+  },2000);
+
+  let hearts=[];
+  for(let i=0;i<40;i++){
+    hearts.push({
+      x:Math.random()*400,
+      y:Math.random()*400,
+      speed:Math.random()*2+1
+    });
+  }
+
+  function anim(){
+    ctx.fillStyle="rgba(0,0,0,0.2)";
+    ctx.fillRect(0,0,400,400);
+
+    ctx.font="20px Arial";
+    hearts.forEach(h=>{
+      ctx.fillText("💖",h.x,h.y);
+      h.y+=h.speed;
+      if(h.y>400){
+        h.y=0;
+        h.x=Math.random()*400;
+      }
+    });
+
+    requestAnimationFrame(anim);
+  }
+
+  anim();
+}
+</script>
+
+</body>
+</html>
